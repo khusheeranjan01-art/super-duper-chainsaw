@@ -25,6 +25,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install flake8
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r backend/requirements.txt
 
       - name: Lint Code with Flake8
@@ -33,7 +34,7 @@ jobs:
 
       - name: Verify Core Imports
         run: |
-          python -c "import fastapi, torch, faiss, sentence_transformers; print('Core ML and API dependencies successfully verified!')"
+          python -c "import fastapi, torch, faiss, transformers; print('Core ML and API dependencies successfully verified!')"
 
   docker-validation:
     name: Docker Configuration Validation (CD)

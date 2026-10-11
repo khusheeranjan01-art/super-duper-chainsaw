@@ -1,3 +1,4 @@
+import gc
 import re
 import joblib
 import faiss
@@ -8,8 +9,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from pathlib import Path
 from transformers import AutoTokenizer, AutoModel
-from sentence_transformers import SentenceTransformer
 
+torch.set_num_threads(1)
 ART = Path(__file__).parent / "artifacts"
 MODEL = "sentence-transformers/all-MiniLM-L12-v2"
 MAXLEN = 512
@@ -417,11 +418,25 @@ class Engine:
 
         self.tok = AutoTokenizer.from_pretrained(MODEL)
         self.model = Matcher(MODEL, len(self.classes))
-        self.model.load_state_dict(torch.load(ART / "best.pt", map_location="cpu"))
+        state_dict = torch.load(ART / "best.pt", map_location="cpu")
+        self.model.load_state_dict(state_dict)
+        del state_dict
         self.model.to(device).eval()
+        gc.collect()
 
-        self.base = SentenceTransformer(MODEL, device=device)   # skill-gap ke liye
-        self.base.max_seq_length = 256
+    @torch.no_grad()
+    def encode_skills(self, texts):
+        if not texts:
+            return np.zeros((0, 384), dtype=np.float32)
+        all_embs = []
+        for i in range(0, len(texts), 64):
+            batch = list(texts[i:i + 64])
+            inputs = self.tok(batch, padding=True, truncation=True, max_length=64, return_tensors="pt").to(device)
+            h = self.model.enc(input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]).last_hidden_state
+            m = inputs["attention_mask"].unsqueeze(-1).to(h.dtype)
+            e = F.normalize(((h * m).sum(1) / m.sum(1).clamp(min=1e-9)).float(), dim=-1)
+            all_embs.append(e.cpu().numpy())
+        return np.vstack(all_embs)
 
     # resume -> (category probabilities, embedding)
     @torch.no_grad()
@@ -437,7 +452,7 @@ class Engine:
         rest = [s for s in req if s not in have_set]
         related, missing = [], []
         if rest and len(have_list):
-            rq = self.base.encode(rest, normalize_embeddings=True, show_progress_bar=False)
+            rq = self.encode_skills(rest)
             sim = rq @ have_emb.T
             for s, row in zip(rest, sim):
                 j = int(row.argmax())
@@ -537,8 +552,7 @@ class Engine:
 
         have_set = set(skill_list(item["skills"])) | (ngrams(raw) & self.vocab)
         have_list = sorted(have_set)[:300]
-        have_emb = (self.base.encode(have_list, normalize_embeddings=True, show_progress_bar=False)
-                    if have_list else np.zeros((0, 384)))
+        have_emb = (self.encode_skills(have_list) if have_list else np.zeros((0, 384), dtype=np.float32))
 
         # Evaluate cross-domain compatibility across all tracks
         domain_compatibility = self._eval_domain_compatibility(raw, have_set, probs)
