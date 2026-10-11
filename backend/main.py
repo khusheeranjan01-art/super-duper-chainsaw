@@ -1,10 +1,8 @@
 import io
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pypdf import PdfReader
 
@@ -184,6 +182,4 @@ def coach(req: CoachReq):
         raise gemini_error(e)
 
 
-# frontend ko same server se serve karo (hamesha end mein)
-FRONT = Path(__file__).parent.parent / "frontend"
-app.mount("/", StaticFiles(directory=FRONT, html=True), name="frontend")
+# Note: Frontend is now deployed on Vercel — no static file serving here.

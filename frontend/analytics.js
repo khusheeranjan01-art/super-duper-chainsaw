@@ -684,7 +684,7 @@
      AI Candidate Screening & Bulk Resume Evaluator Engine
      ========================================================================== */
 
-  const API = location.port === '8000' ? '' : 'http://127.0.0.1:8000';
+  const API = "https://khusheeranjan01-art-super-duper-chainsaw.hf.space";
 
   const ROLE_INSIGHTS = {
     'INFORMATION-TECHNOLOGY': {
