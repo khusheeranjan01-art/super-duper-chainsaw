@@ -12,18 +12,15 @@ pinned: false
 # 🎯 AI-Powered Resume & Internship Matching Platform
 
 [![CI/CD Pipeline](https://github.com/khusheeranjan01-art/super-duper-chainsaw/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/khusheeranjan01-art/super-duper-chainsaw/actions/workflows/ci-cd.yml)
-![Python 3.11](https://img.shields.io/badge/Python-3.11-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-orange.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)
+![Gradio](https://img.shields.io/badge/Gradio-SDK-blue.svg)
 
 An intelligent, multi-tier recruitment and internship matching engine combining **Deep Learning (PyTorch)**, **Dense Vector Retrieval (FAISS)**, **Sentence-Transformers**, and **Google Gemini LLM** for deep applicant analysis, skill-gap recommendations, and candidate screening.
 
 ---
 
 ## 🏛️ System Architecture & Cloud Deployment Strategy
-
-This system follows a **Decoupled Microservices / Multi-Tier Architecture** for scalability, high availability, and isolated resource utilization:
 
 ```
 ┌──────────────────────────────────────────────┐
@@ -35,11 +32,11 @@ This system follows a **Decoupled Microservices / Multi-Tier Architecture** for 
                        │ HTTPS REST API Calls
                        ▼
 ┌──────────────────────────────────────────────┐
-│  2. Containerized Backend (Docker / Cloud)   │
-│     - FastAPI Asynchronous Gateway           │
+│  2. Hugging Face Spaces (Gradio SDK Backend) │
+│     - FastAPI App Mounted via Gradio         │
 │     - Custom PyTorch Dual-Encoder Matcher    │
 │     - FAISS Vector Similarity Index          │
-│     - Isolated container with 16GB RAM tier  │
+│     - Runs Free on CPU Tier                  │
 └──────────────────────┬───────────────────────┘
                        │ Secure LLM Invocations
                        ▼
@@ -63,37 +60,10 @@ This system follows a **Decoupled Microservices / Multi-Tier Architecture** for 
 
 ---
 
-## 🔄 CI/CD Pipeline (GitHub Actions)
-
-The repository integrates an automated **Continuous Integration & Continuous Delivery (CI/CD)** pipeline (`.github/workflows/ci-cd.yml`):
-* **Automated Linting & Syntax Validation:** Flake8 static analysis.
-* **Dependency Health Checks:** Verification of core PyTorch, FAISS, and FastAPI runtimes.
-* **Container Build Testing:** Automated validation of Docker container builds on push to `main`.
-
----
-
 ## 🔒 Security & Environment Configuration
 
-* **Zero-Leakage Policy:** API keys and credentials are never checked into version control.
-* **Production Secrets:** Configured securely through Cloud Environment Variables:
-  ```env
-  GEMINI_API_KEY=your_gemini_api_key_here
-  GEMINI_MODEL=gemini-2.5-flash
-  PORT=7860
-  ```
-
----
-
-## 🐳 Local Docker Execution
-
-To build and run the containerized application locally:
-
-```bash
-# 1. Build the Docker container
-docker build -t resume-matcher .
-
-# 2. Run the container
-docker run -p 7860:7860 --env-file backend/.env resume-matcher
+Production Secrets are configured securely through Hugging Face Space Settings:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash
 ```
-
-Access the application in your browser at `http://localhost:7860`.
