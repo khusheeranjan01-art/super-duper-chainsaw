@@ -8,11 +8,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from pathlib import Path
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModel, AutoConfig
 
 torch.set_num_threads(1)
 ART = Path(__file__).parent / "artifacts"
-MODEL = "sentence-transformers/all-MiniLM-L12-v2"
+# Local bundled model config — avoids HuggingFace Hub download at runtime
+MODEL_CFG = ART / "model_config"
+MODEL = "sentence-transformers/all-MiniLM-L12-v2"  # kept for reference only
 MAXLEN = 512
 SEM_THR = 0.60      # "related skill" threshold (0.5 to 0.7 try kar sakte ho)
 RW = 1.0            # category-probability rerank weight
@@ -90,9 +92,12 @@ def parse_list(s):
 
 # ---------- model ----------
 class Matcher(nn.Module):
-    def __init__(self, name, n_cls, scale=30.0):
+    def __init__(self, cfg_path, n_cls, scale=30.0):
         super().__init__()
-        self.enc = AutoModel.from_pretrained(name)
+        # Load architecture from local bundled config (no HF download needed)
+        # Actual weights are loaded from best.pt by Engine.__init__
+        cfg = AutoConfig.from_pretrained(str(cfg_path), local_files_only=True)
+        self.enc = AutoModel.from_config(cfg)
         self.W = nn.Parameter(torch.randn(n_cls, self.enc.config.hidden_size) * 0.02)
         self.scale = scale
 
@@ -416,8 +421,8 @@ class Engine:
         self.post_y = np.array([self.classes.index(c) for c in posts["category"]])
         self.index = faiss.read_index(str(ART / "postings.faiss"))
 
-        self.tok = AutoTokenizer.from_pretrained(MODEL)
-        self.model = Matcher(MODEL, len(self.classes))
+        self.tok = AutoTokenizer.from_pretrained(str(MODEL_CFG), local_files_only=True)
+        self.model = Matcher(MODEL_CFG, len(self.classes))
         state_dict = torch.load(ART / "best.pt", map_location="cpu")
         self.model.load_state_dict(state_dict)
         del state_dict
