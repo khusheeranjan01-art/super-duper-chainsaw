@@ -1,39 +1,33 @@
 FROM python:3.11-slim
 
-# ── Hugging Face Spaces requires a non-root user ──────────────────────────────
-RUN useradd -m -u 1000 user
-USER user
-ENV HOME=/home/user \
-    PATH=/home/user/.local/bin:$PATH
-
-# ── App environment ────────────────────────────────────────────────────────────
+# Environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/home/user/app/backend \
-    PORT=7860 \
+    PYTHONPATH=/app/backend \
+    PORT=10000 \
     TRANSFORMERS_OFFLINE=1 \
     HF_DATASETS_OFFLINE=1
 
-# System library needed by FAISS
-USER root
+# System libraries for FAISS
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
-USER user
 
-WORKDIR /home/user/app
+WORKDIR /app
 
-# ── Install Python deps (CPU-only PyTorch to keep image lean) ─────────────────
-COPY --chown=user backend/requirements.txt ./requirements.txt
+# Install Python requirements (CPU-only PyTorch first to prevent CUDA bloat)
+COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt
 
-# ── Copy source (no frontend – Vercel handles that now) ───────────────────────
-COPY --chown=user backend ./backend
+# Copy backend & frontend source code
+# model_config/ inside artifacts/ is bundled in git — no HF download needed
+COPY backend ./backend
+COPY frontend ./frontend
 
-# ── Expose Spaces port ────────────────────────────────────────────────────────
-EXPOSE 7860
+# Expose port (10000 for Render web services)
+EXPOSE 10000
 
-# ── Start FastAPI ─────────────────────────────────────────────────────────────
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860} --app-dir backend --workers 1"]
+# Start FastAPI with single worker to stay within 512MB RAM
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000} --app-dir backend --workers 1"]
