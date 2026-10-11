@@ -3,10 +3,6 @@
 *.env
 backend/.env
 
-# Large model weights (>100MB exceeds GitHub limit)
-*.pt
-*.bin
-*.onnx
 
 # Python
 __pycache__/
