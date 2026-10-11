@@ -1,6 +1,6 @@
 // ⚠️ Hugging Face Space ka URL yahan daalo (apna deploy karne ke baad update karo)
 // Format: https://YOUR_HF_USERNAME-YOUR_SPACE_NAME.hf.space
-const API = "https://khusheeranjan01-art-super-duper-chainsaw.hf.space";
+const API = "https://khusheeranjan-super-duper-chainsaw.hf.space";
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 

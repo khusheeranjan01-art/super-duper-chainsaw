@@ -684,7 +684,7 @@
      AI Candidate Screening & Bulk Resume Evaluator Engine
      ========================================================================== */
 
-  const API = "https://khusheeranjan01-art-super-duper-chainsaw.hf.space";
+  const API = "https://khusheeranjan-super-duper-chainsaw.hf.space";
 
   const ROLE_INSIGHTS = {
     'INFORMATION-TECHNOLOGY': {

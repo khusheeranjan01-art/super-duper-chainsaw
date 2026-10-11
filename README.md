@@ -1,3 +1,14 @@
+---
+title: Super Duper Chainsaw
+emoji: ⚡
+colorFrom: yellow
+colorTo: blue
+sdk: gradio
+sdk_version: 6.30.0
+app_file: app.py
+pinned: false
+---
+
 # 🎯 AI-Powered Resume & Internship Matching Platform
 
 [![CI/CD Pipeline](https://github.com/khusheeranjan01-art/super-duper-chainsaw/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/khusheeranjan01-art/super-duper-chainsaw/actions/workflows/ci-cd.yml)
